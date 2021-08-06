@@ -1,10 +1,11 @@
 // capture references to important DOM elements
-var weatherContainer = document.getElementById('weather');
-var formEl = document.querySelector('form');
-var inputEl = document.querySelector('input');
+// CHANGED THESE LINES TO MEET INSTRUCTION #1
+const weatherContainer = document.getElementById('weather');
+const formEl = document.querySelector('form');
+const inputEl = document.querySelector('input');
 
-
-formEl.onsubmit = function(e) {
+// CHANGED THIS LINE TO MEET INSTRUCTION #2 & #3
+formEl.onsubmit = async e => {
   // prevent the page from refreshing
   e.preventDefault();
 
@@ -13,9 +14,14 @@ formEl.onsubmit = function(e) {
   // abort API call if user entered no value
   if (!userInput) return
   // call the API and then update the page
-  getWeather(userInput)
-    .then(displayWeatherInfo)
-    .catch(displayLocNotFound)
+  try {
+    const weatherInfo = await getWeather(userInput)
+    displayWeatherInfo(weatherInfo)
+  }
+  catch (err) {
+    displayLocNotFound()
+  }
+
 
   // reset form field to a blank state
   inputEl.value = ""
@@ -27,22 +33,34 @@ function getWeather(query) {
   if (!query.includes(",")) query += ',us'
   // return the fetch call which returns a promise
   // allows us to call .then on this function
+
+  // CHANGED THIS LINE TO MEET INSTRUCTION #4
   return fetch(
-    'https://api.openweathermap.org/data/2.5/weather?q=' +
-    query +
-    '&units=imperial&appid=6efff70fe1477748e31c17d1c504635f'
+    `https://api.openweathermap.org/data/2.5/weather?q=${query}&units=imperial&appid=6efff70fe1477748e31c17d1c504635f`
   )
     .then(function(res) {
       return res.json()
     })
     .then(function(data) {
       // location not found, throw error/reject promise
+      
+      // CHANGED THIS LINE TO MEET INSTRUCTION #5
+      const {
+        cod,
+        weather: [
+          {
+            icon,
+            description
+          }
+        ] 
+      } = data
+
       if (data.cod === "404") throw new Error('location not found')
       // create weather icon URL
       var iconUrl = 'https://openweathermap.org/img/wn/' +
-        data.weather[0].icon +
+        icon +
         '@2x.png'
-      var description = data.weather[0].description
+      // var description = data.weather[0].description
       var actualTemp = data.main.temp
       var feelsLikeTemp = data.main.feels_like
       var place = data.name + ", " + data.sys.country
